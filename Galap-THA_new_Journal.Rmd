@@ -1,0 +1,391 @@
+---
+title: "Analysis on the relationship between the Sea Dispersal Potential index and morphological traits of Galápagos littoral plants"
+output: html_notebook
+Authors: Fuster-Calvo, A. Nogales, M. Heleno, R. Vera, C. Vargas, P.
+---
+
+## Script description
+
+1. Testing the relationship between morphological traits related to thalassochory plus additional diaspore features (fleshiness, shape and size) and the SDPi.
+
+ 1.1. Mann–Whitney–Wilcoxon tests performed to analyze whether SDPi values differ between species classified as thalassochorous vs. non-thalassochorous
+ 1.2. Linear Models fitted to analyse the relationship between shape and size of diaspores and the SDPi values.
+
+
+```{r}
+library(geoR)
+library(ggplot2)
+library(rcompanion)
+library(lmtest)
+library(hrbrthemes)
+library(ggplot2)
+library(dplyr)
+library(MKinfer)
+library(MASS)
+library(aods3)
+library(visreg)
+```
+
+
+```{r}
+df <- read.csv("SDP-traits.csv", header = TRUE)
+
+colnames(df)[colnames(df) == "length_mean_mm"] <- "length"
+
+structure(df)
+```
+
+
+
+#  (1) Comparing SDPi values between THA vs. non-THA species 
+
+```{r}
+# Analysis of variables - normality
+
+plotNormalHistogram(df$SDP_t33.THA)
+plotNormalHistogram(df$SDP_t33.noTHA)
+
+plotNormalHistogram(df$SDP_t21.THA)
+plotNormalHistogram(df$SDP_t21.noTHA)
+
+
+shapiro.test(df$SDP_t33.THA) #p-value = 0.02547
+shapiro.test(df$SDP_t33.noTHA) #p-value = 0.4649
+
+shapiro.test(df$SDP_t21.THA) #p-value = 0.007653
+shapiro.test(df$SDP_t21.noTHA) #p-value = 0.000131
+
+```
+
+
+The sampled substets of populations don't follow a normal distribution for SDPi values.
+We use the non-parametric Mann–Whitney–Wilcoxon test: 
+
+```{r}
+
+summary(df$SDP_t33.THA) # Median = 71.75
+summary(df$SDP_t33.noTHA) #Median = 31.89
+
+summary(df$SDP_t21.THA) # Median = 13.35
+summary(df$SDP_t21.noTHA) # Median = 0
+
+
+wilcox.test(df$SDP_t33 ~ df$Syndrome_THA, data = df) # p-value = 0.09533 (U = 16.5)
+wilcox.test(df$SDP_t21 ~ df$Syndrome_THA, data = df) # p-value = 0.02711 (U = 11)
+
+#In t33h, the distributions in the two groups (THA vs no-THA) don't differ.
+#In t21d, the distributions in the two groups differed significantly.
+
+
+
+# Do species categorized as THA have higher SDP than no-THA in t21d?
+
+wilcox.test(df$SDP_t21 ~ df$Syndrome_THA, data = df, 
+        exact = FALSE, alternative = "less") # p-value = 0.01356
+
+# #In t21d, the median of species THA is higher than species no-THA.
+```
+
+
+## Boxplot THA vs. no-THA
+
+```{r}
+
+## SDP t33
+
+plot_SDP33_syndromes<-ggplot(df , aes(x=Syndrome_THA, y=SDP_t33),position = position_dodge(5)) + 
+    geom_boxplot() +
+   geom_dotplot(binaxis='y', stackdir='center', dotsize=0.8, fill="black") +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11)) +
+    ggtitle("SDPt33~Syndrome") +
+    xlab("")+
+scale_fill_manual(values = c("gray87", "lightblue"))+
+  stat_boxplot(geom ='errorbar', width = 0.6) +
+   stat_summary(fun.y=mean, geom="point", shape=10, size=6, color="red")+
+scale_y_continuous(sec.axis = dup_axis(label = NULL,
+                                         name = NULL),
+                     expand = expand_scale(mult = c(0, 0)),
+                     breaks = pretty(c(0,100), n = 5),
+                     limits = c(-3,102))
+
+
+
+## SDP t21
+
+plot_SDP21_syndromes<-ggplot(df , aes(x=Syndrome_THA, y=SDP_t21),position = position_dodge(5)) + 
+    geom_boxplot() +
+   geom_dotplot(binaxis='y', stackdir='center', dotsize=0.8, fill="black") +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11)) +
+    ggtitle("SDPt21~Syndrome") +
+    xlab("")+
+scale_fill_manual(values = c("gray87", "lightblue"))+
+  stat_boxplot(geom ='errorbar', width = 0.6) +
+  stat_summary(fun=mean, geom="point", shape=10, size=6, color="red")+
+scale_y_continuous(sec.axis = dup_axis(label = NULL,
+                                         name = NULL),
+                     expand = expansion(mult = c(0, 0)),
+                     breaks = pretty(c(0,100), n = 5),
+                     limits = c(-3,102))
+
+
+par(mfrow=c(1,2))
+plot(plot_SDP33_syndromes)
+plot(plot_SDP21_syndromes)
+
+```
+
+
+
+# (2) Comparing SDPi values between species with Fleshy vs. Dry diaspores.
+
+```{r}
+# Analysis of variables - normality
+
+plotNormalHistogram(df$SDP_t33_Fleshy)
+plotNormalHistogram(df$SDP_t33_Dry)
+
+plotNormalHistogram(df$SDP_t21_Fleshy)
+plotNormalHistogram(df$SDP_t21_Dry)
+
+
+shapiro.test(df$SDP_t33_Fleshy) #p-value = 0.1216
+shapiro.test(df$SDP_t33_Dry) #p-value = 0.1582
+
+shapiro.test(df$SDP_t21_Fleshy) #p-value = 0.003459
+shapiro.test(df$SDP_t21_Dry) #p-value = 0.008011
+
+# for t33h, Fleshy and Dry distribute normally.
+# for t21d, they don't.
+
+```
+
+
+## Mann–Whitney–Wilcoxon tests
+
+```{r}
+#t33h
+summary(df$SDP_t33_Fleshy) # Median = 70.06
+summary(df$SDP_t33_Dry) # Median = 35.60
+wilcox.test(df$SDP_t33 ~ df$Fleshiness, data = df) # W = 43, p-value = 0.967
+
+# t.test (parametric) on t33h to check whether results differ from Mann-Whitney U test.
+t.test(df$SDP_t33~df$Fleshiness) #t = -0.1517, df = 13.687, p-value = 0.8816
+# mean in group Dry (51.94273) mean in group Fleshy (54.65875).
+
+
+#t21d
+summary(df$SDP_t21_Fleshy) # Median = 8.37
+summary(df$SDP_t21_Dry) # Median = 8.39
+wilcox.test(df$SDP_t21 ~ df$Fleshiness, data = df) # W = 46, p-value = 0.8999
+```
+
+
+
+# ############ SDP index ~ Morphological traits ############
+
+
+
+## Variables transformations
+
+Variables visualization
+```{r}
+
+par(mfrow=c(2,2))
+###SDP index t33h
+SDP33_normHist<-plotNormalHistogram(df$SDP_t33)
+
+###SDP index t21d
+SDP21_normHist<-plotNormalHistogram(df$SDP_t21)
+
+###Length
+length_normHist<-plotNormalHistogram(df$length)
+
+###Shape
+Shape_normHist<-plotNormalHistogram(df$shape_EI)
+
+```
+
+
+Transformation - Tukey’s Ladder of Powers
+
+transformTukey() function performs iterative Shapiro–Wilk tests, and finds the lambda value that maximizes the W statistic from those tests.  In essence, this finds the power transformation that makes the data fit the normal distribution as closely as possible with this type of transformation.
+
+```{r}
+###SDP index t33h
+SDP33_Tuk<-transformTukey(df$SDP_t33) #Lambda = 0.9
+
+###SDP index t21d
+SDP21_Tuk<-transformTukey(df$SDP_t21) #Lambda = 0.33
+
+###Length
+length_Tuk<-transformTukey(df$length) #Lambda = -0.125
+
+###Shape
+shape_tuk<-transformTukey(df$shape_EI) #Lambda = -2.95
+
+```
+
+
+## Linear Models. SDPi ~ length + shape
+```{r}
+
+
+lm_SDP33_1<-lm(data=df, SDP_t33~length_Tuk+shape_tuk, na.action=na.exclude) # meet assumptions
+lm_SDP21_2<-lm(data=df, SDP21_Tuk~length_Tuk+shape_tuk, na.action=na.exclude) # meet assumptions
+
+# ----------------- Model evaluation
+
+### ---- Residuals plots
+
+### SDPt33h
+par(mfrow=c(2,2))
+plot(lm_SDP33_1)
+
+### SDPt21d
+par(mfrow=c(2,2))
+plot(lm_SDP21_2)
+
+
+
+### ---- Assumptions' tests
+
+#linearity
+resettest(lm_SDP33_1)#p-value = 0.8486
+resettest(lm_SDP21_2) #p-value = 0.9421
+
+#normality
+shapiro.test(residuals(lm_SDP33_1))#p-value = 0.7909
+shapiro.test(residuals(lm_SDP21_2))#p-value = 0.3551
+
+#Homocedasticity
+lmtest::bptest(lm_SDP33_1) #p-value = p-value = 0.9752
+lmtest::bptest(lm_SDP21_2)#p-value =  0.2656
+
+
+
+
+summary(lm_SDP33_1)
+summary(lm_SDP21_2)
+```
+
+
+
+
+## Data visualization. SDPi ~ length
+
+```{r}
+## SDPi t33h ~ length
+
+plot_SDP33_length<-ggplot(df, aes(x=length_Tuk, y=SDP33_Tuk)) + 
+  theme_ipsum()+
+  geom_point()+
+  geom_smooth(method=lm)
+
+
+
+## SDPi t21d ~ length
+
+plot_SDP21_length<-ggplot(df, aes(x=length_Tuk, y=SDP21_Tuk)) + 
+  theme_ipsum()+
+  geom_point()+
+  geom_smooth(method=lm)
+
+
+par(mfrow=c(1,2))
+plot_SDP33_length
+plot_SDP21_length
+
+```
+
+
+
+
+## #### Flotability and Viability components of SDPt33 ~ Length
+
+Length was significantly related with SDP t33h. In the folowing lines, it is analyzed the relationship between diaspore's length and both components of the SDP t33h (floatability and viability). 
+
+## Linear Models
+
+```{r}
+lm_SDP33_floatability<-lm(data=df, Ft33~length_Tuk, na.action=na.exclude)
+lm_SDP33_viability<-lm(data=df, Vt33~length_Tuk, na.action=na.exclude)
+
+
+### ---- Residuals plots
+
+#SDPt33h
+par(mfrow=c(2,2))
+plot(lm_SDP33_floatability)
+
+
+#SDPt21d
+par(mfrow=c(2,2))
+plot(lm_SDP33_viability)
+
+
+### ---- Assumptions' tests
+
+#linearity
+
+resettest(lm_SDP33_floatability)#p-value = 0.8604
+resettest(lm_SDP33_viability) #p-value = 0.7949
+
+#normality
+
+shapiro.test(residuals(lm_SDP33_floatability))#p-value = 0.3147
+shapiro.test(residuals(lm_SDP33_viability))#p-value = 0.8269
+
+#Homocedasticity
+
+lmtest::bptest(lm_SDP33_floatability) #p-value = p-value = 0.2848
+lmtest::bptest(lm_SDP33_viability)#p-value = 0.1845
+
+
+
+summary(lm_SDP33_floatability)
+summary(lm_SDP33_viability)
+```
+
+
+## Data visualization
+
+```{r}
+# Ft33 ~ log(length)
+
+plot_Ft33_length<-ggplot(df, aes(x=length_Tuk, y=Ft33)) + 
+  theme_ipsum()+
+  geom_point()+
+  geom_smooth(method=lm)
+
+
+
+# Vt33 ~ log(length)
+
+plot_Vt33_log.length<-ggplot(df, aes(x=length_Tuk, y=Vt33)) + 
+  theme_ipsum()+
+  geom_point()+
+  geom_smooth(method=lm)+
+  ylim(0,150)
+
+
+
+par(mfrow=c(1,2))
+plot_Ft33_length
+plot_Vt33_log.length
+
+```
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,132 @@
+---
+title: "Analysis on the relationship between the Sea Dispersal Potential index and distribution of littoral plants across the Galápagos "
+output: html_notebook
+Authors: Fuster-Calvo, A. Nogales, M. Heleno, R. Vera, C. Vargas, P.
+---
+
+
+## Script description
+
+1. Generalized Linear Models are fitted between SDPi and the distribution of species across the Galápagos (N islands where present).
+
+ 1.1. GLM models considering the islands in the present.
+ 1.2. GLM models considering the paleo-islands configuration.
+
+
+```{r}
+library(MASS)
+library(visreg)
+library(aods3)
+library(lmtest)
+library(rcompanion)
+```
+
+```{r}
+GLM <- read.csv("GLM_SDP.csv",header=TRUE)
+```
+
+
+## 1.1. GLM models considering the islands' configuration in the present. 
+
+```{r}
+
+glm <- glm(nislands ~ SDP33 + SDP21,GLM, family=poisson)
+
+
+
+### ---- Residuals plots
+
+par(mfrow=c(2,2))
+plot(glm)
+
+
+### ---- Assumptions' tests
+
+#linearity
+resettest(glm)#p-value = 0.04569
+
+#normality
+shapiro.test(residuals(glm))#p-value = 0.3004
+
+#Homocedasticity
+lmtest::bptest(glm) #p-value = 0.05929
+
+
+anova(glm)
+summary(glm)
+```
+
+
+
+
+## 1.2. GLM models considering the paleo-islands' configuration.
+
+
+```{r}
+
+glm_paleo<- glm(paleoislands ~ SDP33 + SDP21,GLM, family=poisson)
+
+
+
+### ---- Residuals plots
+
+par(mfrow=c(2,2))
+plot(glm_paleo)
+
+
+### ---- Assumptions' tests
+
+#linearity
+resettest(glm_paleo)#p-value = 0.01243**
+
+#normality
+shapiro.test(residuals(glm_paleo))#p-value = 0.3105
+
+#Homocedasticity
+lmtest::bptest(glm_paleo) #p-value = 0.3282
+
+
+anova(glm_paleo)
+summary(glm_paleo)
+```
+
+
+Model glm_paleo violates the assumption of linearity (P = 0.01243). We therefore transform the predictor SDP21, which does not follow a normal distribution. We use a power transformation using Tukey's Ladder of Powers method. transformTukey() function performs iterative Shapiro-Wilk tests, and finds the lambda value that maximizes the W statistic from those tests.  In essence, this finds the power transformation that makes the data fit the normal distribution as closely as possible with this type of transformation.
+
+The model is fitted again with the transformed variable SDPi21d_Tuk (SDP21d^0.325).
+
+```{r}
+SDPi21d_Tuk<-transformTukey(GLM$SDP21) # lambda = 0.325
+
+glm_paleo1<- glm(paleoislands ~ SDP33 + SDPi21d_Tuk,GLM, family=poisson)
+
+
+### ---- Residuals plots
+
+par(mfrow=c(2,2))
+plot(glm_paleo1)
+
+
+### ---- Assumptions' tests
+
+#linearity
+resettest(glm_paleo1)#p-value = 0.9488
+#normality
+shapiro.test(residuals(glm_paleo1))#p-value = 0.9196
+
+#Homocedasticity
+lmtest::bptest(glm_paleo1) #p-value = 0.5572
+
+anova(glm_paleo1)
+summary(glm_paleo1)
+```
+
+
+
+
+
+
+
+
+
+
