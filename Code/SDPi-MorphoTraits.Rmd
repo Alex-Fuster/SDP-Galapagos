@@ -28,7 +28,7 @@ library(visreg)
 
 
 ```{r}
-df <- read.csv("SDP-traits.csv", header = TRUE)
+df <- read.csv("../Data/SDP-traits.csv", header = TRUE)
 
 colnames(df)[colnames(df) == "length_mean_mm"] <- "length"
 

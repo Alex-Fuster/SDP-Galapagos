@@ -22,7 +22,7 @@ library(rcompanion)
 ```
 
 ```{r}
-GLM <- read.csv("GLM_SDP.csv",header=TRUE)
+GLM <- read.csv("../Data/GLM_SDP.csv",header=TRUE)
 ```
 
 
