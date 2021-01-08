@@ -19,6 +19,10 @@ library(visreg)
 library(aods3)
 library(lmtest)
 library(rcompanion)
+library(ggplot2)
+library(DHARMa)
+library(AER)
+library(performance)
 ```
 
 ```{r}
@@ -34,10 +38,29 @@ glm <- glm(nislands ~ SDP33 + SDP21,GLM, family=poisson)
 
 
 
-### ---- Residuals plots
+#---- Residuals' plot
 
 par(mfrow=c(2,2))
 plot(glm)
+
+
+#---- Linearity in each variable
+
+ggplot(data.frame(x1=GLM$SDP33,pearson=residuals(glm,type="pearson")),
+      aes(x=x1,y=pearson)) +
+    geom_point() +
+    theme_bw()
+
+ggplot(data.frame(x1=GLM$SDP21,pearson=residuals(glm,type="pearson")),
+      aes(x=x1,y=pearson)) +
+    geom_point() +
+    theme_bw()
+
+#---- LNormality of residuals
+qqnorm(residuals(glm))
+
+
+
 
 
 ### ---- Assumptions' tests
@@ -50,6 +73,11 @@ shapiro.test(residuals(glm))#p-value = 0.3004
 
 #Homocedasticity
 lmtest::bptest(glm) #p-value = 0.05929
+
+
+#Dispersion
+dispersiontest(glm,trafo=1) #p-value = 0.8
+check_overdispersion(glm) #p-value =  0.533
 
 
 anova(glm)
@@ -66,12 +94,37 @@ summary(glm)
 
 glm_paleo<- glm(paleoislands ~ SDP33 + SDP21,GLM, family=poisson)
 
+glm_paleo3<- glm(paleoislands ~ SDP33 + SDP21,GLM, family=quasipoisson)
+
 
 
 ### ---- Residuals plots
 
 par(mfrow=c(2,2))
 plot(glm_paleo)
+
+#---- Residuals' plot
+
+par(mfrow=c(2,2))
+plot(glm)
+
+
+#---- Linearity in each variable
+
+ggplot(data.frame(x1=GLM$SDP33,pearson=residuals(glm_paleo,type="pearson")),
+      aes(x=x1,y=pearson)) +
+    geom_point() +
+    theme_bw()
+
+ggplot(data.frame(x1=GLM$SDP21,pearson=residuals(glm_paleo,type="pearson")),
+      aes(x=x1,y=pearson)) +
+    geom_point() +
+    theme_bw()
+
+#---- LNormality of residuals
+qqnorm(residuals(glm_paleo))
+
+
 
 
 ### ---- Assumptions' tests
@@ -85,13 +138,16 @@ shapiro.test(residuals(glm_paleo))#p-value = 0.3105
 #Homocedasticity
 lmtest::bptest(glm_paleo) #p-value = 0.3282
 
+#Dispersion
+dispersiontest(glm_paleo,trafo=1) #p-value = 1
+check_overdispersion(glm_paleo) #p-value = 0.959
 
 anova(glm_paleo)
 summary(glm_paleo)
 ```
 
 
-Model glm_paleo violates the assumption of linearity (P = 0.01243). We therefore transform the predictor SDP21, which does not follow a normal distribution. We use a power transformation using Tukey's Ladder of Powers method. transformTukey() function performs iterative Shapiro-Wilk tests, and finds the lambda value that maximizes the W statistic from those tests.  In essence, this finds the power transformation that makes the data fit the normal distribution as closely as possible with this type of transformation.
+Model "glm_paleo" violates the assumption of linearity (P = 0.01243). We therefore transform the predictor SDP21, which does not follow a normal distribution. We use a power transformation using Tukey's Ladder of Powers method. transformTukey() function performs iterative Shapiro-Wilk tests, and finds the lambda value that maximizes the W statistic from those tests.  In essence, this finds the power transformation that makes the data fit the normal distribution as closely as possible with this type of transformation.
 
 The model is fitted again with the transformed variable SDPi21d_Tuk (SDP21d^0.325).
 
@@ -107,24 +163,39 @@ par(mfrow=c(2,2))
 plot(glm_paleo1)
 
 
+#---- Linearity in each variable
+
+ggplot(data.frame(x1=GLM$SDP33,pearson=residuals(glm_paleo1,type="pearson")),
+      aes(x=x1,y=pearson)) +
+    geom_point() +
+    theme_bw()
+
+ggplot(data.frame(x1=GLM$SDP21,pearson=residuals(glm_paleo1,type="pearson")),
+      aes(x=x1,y=pearson)) +
+    geom_point() +
+    theme_bw()
+
+#---- LNormality of residuals
+qqnorm(residuals(glm_paleo1))
+
+
+
 ### ---- Assumptions' tests
 
 #linearity
 resettest(glm_paleo1)#p-value = 0.9488
+
 #normality
 shapiro.test(residuals(glm_paleo1))#p-value = 0.9196
 
 #Homocedasticity
 lmtest::bptest(glm_paleo1) #p-value = 0.5572
 
-anova(glm_paleo1)
-summary(glm_paleo1)
+#Dispersion
+dispersiontest(glm_paleo1,trafo=1) #p-value = 1
+check_overdispersion(glm_paleo1) #p-value = 0.987
+
 ```
-
-
-
-
-
 
 
 
