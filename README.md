@@ -9,5 +9,5 @@ SDPi is shown  to be a useful tool to compare the thalassochorous potentials of 
 
 
 #### Content of Repository
-The R code used for the analysis is summarized in Two R Markdown documents in "Code" and the data in "Data". If you have any questions, please do not hesitate to contact us.
+The R code used for the analysis is summarized in two R Markdown documents in "Code" and the data in "Data". If you have any questions, please do not hesitate to contact us.
 
