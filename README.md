@@ -1,5 +1,5 @@
 # Sea dispersal potential and colonization of the Galápagos littoral flora
-Alexandre Fuster-Calvo, Manuel Nogales, Ruben Heleno, Carlos Vera, Pablo Vargas 
+### Alexandre Fuster-Calvo, Manuel Nogales, Ruben Heleno, Carlos Vera, Pablo Vargas 
 
 ##Abstract. 
 Seed dispersal by oceanic currents (thalassochory) is considered one of the main long-distance dispersal (LDD) mechanisms for the colonization of oceanic islands by plants. Diaspores of littoral species are often hypothesized to be physiologically adapted to seawater dispersal favouring inter-island colonization. In this study, we experimentally tested the sea dispersal potential  of a large proportion of Galápagos littoral flora and explored its correlation with plant distribution across the archipelago. We propose a simple Sea Dispersal Potential index (SDPi) to quantify thalassochorous potential  of any species. 
