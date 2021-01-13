@@ -26,7 +26,7 @@ library(performance)
 ```
 
 ```{r}
-GLM <- read.csv("../Data/GLM_SDP.csv",header=TRUE)
+GLM <- read.csv("../Data/SDPi-distrib.csv",header=TRUE)
 ```
 
 
@@ -197,6 +197,28 @@ check_overdispersion(glm_paleo1) #p-value = 0.987
 
 ```
 
+
+
+#### Seconday dispersal Scaevola plumieri
+
+We use a non-parametric Fisher Exact probability test to compare %Flotability and %Viability between Scaevola plumieri's seeds retrieved from bird's pellets with those retrieved directly from the plant.
+
+```{r}
+#Flotability t33h
+Flot.t33h <- prop.test(x = c(195, 183), n = c(200, 200)) #pellets, plant
+#Flotability 21d
+Flot.t21d <- prop.test(x = c(160, 153), n = c(165, 170))
+
+#Viability t33h
+V.t33h <- prop.test(x = c(19,15), n = c(21,20)) #pellets, plant
+#Viability 21d
+V.t21d <- prop.test(x = c(6,5), n = c(20, 20))
+
+Flot.t33h
+Flot.t21d
+V.t33h
+V.t21d
+```
 
 
 
